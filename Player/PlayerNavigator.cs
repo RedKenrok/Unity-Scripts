@@ -32,7 +32,7 @@ namespace Player {
 				_rigidbody = GetComponent<Rigidbody>();
 				
 				_layerMask = LayerMask.NameToLayer(_areaMaskName);
-				_slopeMaxHeight = Mathf.Sin(Mathf.Deg2Rad * NavMesh.GetSettingsByID(_navigationAgent.agentTypeID).agentSlope);
+				_slopeMaxHeight = Mathf.Sin(Mathf.Deg2Rad * NavMesh.GetSettingsByID(_navigationAgent.agentTypeID).agentSlope) * 2f;
 			}
 			
 			private void OnEnable() {
@@ -48,7 +48,7 @@ namespace Player {
 				}
 				
 				// Calculate the offset position.
-				_offsetPositionTemp = 0.5f * _navigationAgent.speed * _speed * Time.fixedDeltaTime * (CalculateRotationY(_camera.transform.rotation) * new Vector3(_input.Value.x, 0, _input.Value.y));
+				_offsetPositionTemp = _navigationAgent.speed * _speed * Time.fixedDeltaTime * (CalculateRotationY(_camera.transform.rotation) * new Vector3(_input.Value.x, 0, _input.Value.y));
 				
 				if (!NavMesh.SamplePosition(transform.position + _offsetPositionTemp, out _navigationHitTemp, _offsetPositionTemp.magnitude, NavMesh.AllAreas)) {
 					return;

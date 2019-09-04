@@ -2,6 +2,8 @@
 
 A series of modular components and other scripts that I often use in across different projects.
 
+> The scripts are as is, and I can not guarantee support if you submit an issue or pull request.
+
 ## Animation
 
 A simple animation system for when the build-in animation is to much for what you want to achieve and when a much simpler system works too.
