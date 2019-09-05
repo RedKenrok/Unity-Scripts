@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 namespace Player {
-	/// <summary>For a detailed explanation of this class see the article found in [_Articles/PlayerNavigator.md]()</summary>
+	/// <summary>For a detailed explanation of this class see the article found in [_Articles/PlayerNavigator.md](https://github.com/RedKenrok/Unity-Scripts/blob/master/_Articles/PlayerNavigator.md)</summary>
 	[RequireComponent(typeof(NavMeshAgent), typeof(Rigidbody))]
 	public class PlayerNavigator : MonoBehaviour {
 		#region Variables
