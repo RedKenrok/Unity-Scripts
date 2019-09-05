@@ -6,11 +6,11 @@
 
 </p>
 
-This article will take you through the process of making a player navigation scripts that allows you to move a character across Unity's navigation surface using a direction as input device. This allows you to pre-generate a navigation mesh that the character can not leave and avoids the necessity of doing physics calculations and putting up invisible barriers. The downside is that a player can not move off or across mesh links easily without creating a custom system for it, think of jumping over obstacles. Luckily not all games require this and so this method might be useful for your game. I like this method because it can be used with both stick input as well as pointer input, which makes it great for mobile games.
+This article will take you through the process of making a player navigation scripts that allows you to move a character across Unity's navigation surface using a direction as input device. This allows you to generate a navigation mesh beforehand that the character can not leave and avoids the necessity of doing physics calculations and putting up invisible barriers. The downside is that a player can not move off or across mesh links easily without creating a custom system for it, think of jumping over obstacles. Luckily not all games require this and so this method might be useful for your game. I like this method because it can be used with both stick input as well as pointer input, which makes it great for mobile games.
 
-> I highly recommend you start by add Unity's [NavMeshComponents](https://github.com/Unity-Technologies/NavMeshComponents) to your project, which allow you to easily create a NavMeshSurface.
+> I highly recommend you start by add Unity's [NavMeshComponents](https://github.com/Unity-Technologies/NavMeshComponents) to your project, which allow you to easily create a `NavMeshSurface`.
 
-We start the writing our system by importing the `UnityEngine`, and `UnityEngine.AI` namespaces as well as require the `NavMeshAgent` and `Rigidbody` scripts to be attached to the game object. Reqeuring the components makes sure they can always be retrieved and are automatically added the game object when added via the inspector window.
+We start the writing our system by importing the `UnityEngine`, and `UnityEngine.AI` namespaces as well as require the `NavMeshAgent` and `Rigidbody` scripts to be attached to the game object. Requiring the components makes sure they can always be retrieved and are automatically added the game object when added via the inspector window.
 
 ```C#
 using UnityEngine;
@@ -129,10 +129,6 @@ Next up lets add a destination and a stop functions. These allow us to easily co
 Now we want to get into the real deal and add the move functions. These methods will allow us provide the component with input. The input will be stored in variable from earlier so we can use it an update method later.
 
 ```C#
-#region Variables
-  
-#endregion
-
 #region Public functions
   /// <summary>Set the move vector.</summary>
   /// <param name="_input">Input vector.</param>
@@ -216,127 +212,126 @@ using UnityEngine;
 using UnityEngine.AI;
 
 namespace Player {
-	/// <summary>For a detailed explanation of this class see the article found in [_Articles/PlayerNavigator.md]()</summary>
-	[RequireComponent(typeof(NavMeshAgent), typeof(Rigidbody))]
-	public class PlayerNavigator : MonoBehaviour {
-		#region Variables
-			[SerializeField] [Range(0f, 8f)] [Tooltip("Additional movement speed when using the Move function.")]
-			public float _speed = 2f;
-			[SerializeField] [Tooltip("The name of the walkable area.")]
-			private string _areaMaskName = "Walkable";
-			[SerializeField] [Tooltip("The layers of the raycastable and walkable surface.")]
-			private LayerMask _layerMask = default;
-			
-			private Camera _camera = default;
-			private NavMeshAgent _navigationAgent = default;
-			private Rigidbody _rigidbody = default;
-			
-			private int _areaMask = default;
-			private float _slopeMaxHeight = 0;
-			private Vector2? _input = default;
-			
-			private NavMeshHit _navigationHitTemp = default;
-			private Vector3 _offsetPositionTemp = default;
-		#endregion
-		
-		#region MonoBehaviour functions
-			private void Awake() {
-				_camera = GetComponentInChildren<Camera>();
-				_navigationAgent = GetComponent<NavMeshAgent>();
-				_navigationAgent.updateRotation = false;
-				_rigidbody = GetComponent<Rigidbody>();
-				
-				_areaMask = 1 << NavMesh.GetAreaFromName(_areaMaskName);
-				_slopeMaxHeight = Mathf.Sin(Mathf.Deg2Rad * NavMesh.GetSettingsByID(_navigationAgent.agentTypeID).agentSlope) * 2f;
-			}
-			
-			private void OnEnable() {
-				// Place object on navigation surface.
-				if (NavMesh.SamplePosition(transform.position, out _navigationHitTemp, 16f, _areaMask)) {
-					_navigationAgent.Warp(_navigationHitTemp.position);
-				}
-			}
-			
-			private void FixedUpdate() {
-				// Return early if there is no input value set.
-				if (!_input.HasValue) {
-					return;
-				}
-				
-				// Calculate the offset position.
-				_offsetPositionTemp = (_navigationAgent.speed * _speed * Time.fixedDeltaTime) * (CalculateRotationY(_camera.transform.rotation) * new Vector3(_input.Value.x, 0, _input.Value.y));
-				
-				// Sample the nearest position, return early if none found.
-				if (!NavMesh.SamplePosition(transform.position + _offsetPositionTemp, out _navigationHitTemp, _offsetPositionTemp.magnitude, _areaMask)) {
-					return;
-				}
-				
-				// Check if position is out of range in y axis.
-				if (Mathf.Abs(_navigationHitTemp.position.y - transform.position.y) > _slopeMaxHeight * Vector2.Distance(transform.position, _navigationHitTemp.position)) {
-					return;
-				}
-				
-				// Apply new position to rigidbody and navigation agent.
-				_rigidbody.MovePosition(_navigationHitTemp.position);
-				_navigationAgent.SetDestination(transform.position);
-			}
-		#endregion
-		
-		#region Public functions
-			/// <summary> Stop the agent from moving.</summary>
-			public void Stop() {
-				// Reset position.
-				_input = default;
-				_navigationAgent.SetDestination(transform.position);
-			}
-			
-			/// <summary>Set the agents destination</summary>
-			/// <param name="_transform">The transform of the game object hit with the raycast.</param>
-			/// <param name="_position">The raycast hit position.</param>
-			public void SetDestination(Transform _transform, Vector3 _position) {
-				// Check if the layer of the game object is valid.
-				if (!_layerMask.Contains(_transform.gameObject.layer)) {
-					return;
-				}
-				
-				// Sample the nearest position.
-				if (NavMesh.SamplePosition(_position, out _navigationHitTemp, _navigationAgent.stoppingDistance * 64, _areaMask)) {
-					_input = default;
-					_navigationAgent.SetDestination(_navigationHitTemp.position);
-				}
-			}
-			
-			/// <summary>Set the move vector.</summary>
-			/// <param name="_input">Input vector.</param>
-			private void Move(Vector2 _input) {
-				// Override the current input.
-				this._input = _input;
-			}
-			/// <summary>Reset values when moving is done.</summary>
-			private void MoveCanceled() {
-				// Reset input.
-				_input = default;
-			}
-		#endregion
-		
-		#region Private functions
-			/// <summary>Check whether the layer is contained in the mask.</summary>
-			/// <param name="_mask">The layer mask.</param>
-			/// <param name="_layer">The index of the layer.</param>
-			/// <returns>True if layer is contained in mask.</returns>
-			private static bool Contains(this LayerMask _mask, int _layer) {
-				return (_mask & 1 << _layer) > 0;
-			}
+  [RequireComponent(typeof(NavMeshAgent), typeof(Rigidbody))]
+  public class PlayerNavigator : MonoBehaviour {
+    #region Variables
+      [SerializeField] [Range(0f, 8f)] [Tooltip("Additional movement speed when using the Move function.")]
+      public float _speed = 2f;
+      [SerializeField] [Tooltip("The name of the walkable area.")]
+      private string _areaMaskName = "Walkable";
+      [SerializeField] [Tooltip("The layers of the raycastable and walkable surface.")]
+      private LayerMask _layerMask = default;
       
-			/// <summary>Get the rotation on y-axis of quaternion.</summary>
-			/// <param name="quaternion">The rotation.</param>
-			/// <returns>The angle offset on the y-axis.</returns>
-			private static Quaternion CalculateRotationY(Quaternion quaternion) {
-				float theta = Mathf.Atan2(quaternion.y, quaternion.w);
-				return new Quaternion(0, Mathf.Sin(theta), 0, Mathf.Cos(theta));
-			}
-		#endregion
-	}
+      private Camera _camera = default;
+      private NavMeshAgent _navigationAgent = default;
+      private Rigidbody _rigidbody = default;
+      
+      private int _areaMask = default;
+      private float _slopeMaxHeight = 0;
+      private Vector2? _input = default;
+      
+      private NavMeshHit _navigationHitTemp = default;
+      private Vector3 _offsetPositionTemp = default;
+    #endregion
+    
+    #region MonoBehaviour functions
+      private void Awake() {
+        _camera = GetComponentInChildren<Camera>();
+        _navigationAgent = GetComponent<NavMeshAgent>();
+        _navigationAgent.updateRotation = false;
+        _rigidbody = GetComponent<Rigidbody>();
+        
+        _areaMask = 1 << NavMesh.GetAreaFromName(_areaMaskName);
+        _slopeMaxHeight = Mathf.Sin(Mathf.Deg2Rad * NavMesh.GetSettingsByID(_navigationAgent.agentTypeID).agentSlope) * 2f;
+      }
+      
+      private void OnEnable() {
+        // Place object on navigation surface.
+        if (NavMesh.SamplePosition(transform.position, out _navigationHitTemp, 16f, _areaMask)) {
+          _navigationAgent.Warp(_navigationHitTemp.position);
+        }
+      }
+      
+      private void FixedUpdate() {
+        // Return early if there is no input value set.
+        if (!_input.HasValue) {
+          return;
+        }
+        
+        // Calculate the offset position.
+        _offsetPositionTemp = (_navigationAgent.speed * _speed * Time.fixedDeltaTime) * (CalculateRotationY(_camera.transform.rotation) * new Vector3(_input.Value.x, 0, _input.Value.y));
+        
+        // Sample the nearest position, return early if none found.
+        if (!NavMesh.SamplePosition(transform.position + _offsetPositionTemp, out _navigationHitTemp, _offsetPositionTemp.magnitude, _areaMask)) {
+          return;
+        }
+        
+        // Check if position is out of range in y axis.
+        if (Mathf.Abs(_navigationHitTemp.position.y - transform.position.y) > _slopeMaxHeight * Vector2.Distance(transform.position, _navigationHitTemp.position)) {
+          return;
+        }
+        
+        // Apply new position to rigidbody and navigation agent.
+        _rigidbody.MovePosition(_navigationHitTemp.position);
+        _navigationAgent.SetDestination(transform.position);
+      }
+    #endregion
+    
+    #region Public functions
+      /// <summary> Stop the agent from moving.</summary>
+      public void Stop() {
+        // Reset position.
+        _input = default;
+        _navigationAgent.SetDestination(transform.position);
+      }
+      
+      /// <summary>Set the agents destination</summary>
+      /// <param name="_transform">The transform of the game object hit with the raycast.</param>
+      /// <param name="_position">The raycast hit position.</param>
+      public void SetDestination(Transform _transform, Vector3 _position) {
+        // Check if the layer of the game object is valid.
+        if (!_layerMask.Contains(_transform.gameObject.layer)) {
+          return;
+        }
+        
+        // Sample the nearest position.
+        if (NavMesh.SamplePosition(_position, out _navigationHitTemp, _navigationAgent.stoppingDistance * 64, _areaMask)) {
+          _input = default;
+          _navigationAgent.SetDestination(_navigationHitTemp.position);
+        }
+      }
+      
+      /// <summary>Set the move vector.</summary>
+      /// <param name="_input">Input vector.</param>
+      private void Move(Vector2 _input) {
+        // Override the current input.
+        this._input = _input;
+      }
+      /// <summary>Reset values when moving is done.</summary>
+      private void MoveCanceled() {
+        // Reset input.
+        _input = default;
+      }
+    #endregion
+    
+    #region Private functions
+      /// <summary>Check whether the layer is contained in the mask.</summary>
+      /// <param name="_mask">The layer mask.</param>
+      /// <param name="_layer">The index of the layer.</param>
+      /// <returns>True if layer is contained in mask.</returns>
+      private static bool Contains(this LayerMask _mask, int _layer) {
+        return (_mask & 1 << _layer) > 0;
+      }
+      
+      /// <summary>Get the rotation on y-axis of quaternion.</summary>
+      /// <param name="quaternion">The rotation.</param>
+      /// <returns>The angle offset on the y-axis.</returns>
+      private static Quaternion CalculateRotationY(Quaternion quaternion) {
+        float theta = Mathf.Atan2(quaternion.y, quaternion.w);
+        return new Quaternion(0, Mathf.Sin(theta), 0, Mathf.Cos(theta));
+      }
+    #endregion
+  }
 }
 ```
 
