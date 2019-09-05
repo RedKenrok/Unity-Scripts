@@ -6,29 +6,9 @@ Components that deal with the interface's behaviour.
 
 Allows you to have a list of items that can be reordered.
 
-### OnDragged.cs
-
-
-
-### ReorderableItem.cs
-
-
-
-### ReorderableList.cs
-
-
-
 ## Selectable
 
 Creates a bar of selectable items that can be pressed.
-
-### SelectableItem.cs
-
-
-
-### SelectableList.cs
-
-
 
 ## NonDrawingGraphics.cs
 

@@ -6,9 +6,6 @@ namespace Interface.Reorderable {
 	[RequireComponent(typeof(LayoutElement))]
 	public class ReorderableItem : MonoBehaviour {
 		#region Variables
-			[SerializeField]
-			private OnDragged _onDragged = default;
-			
 			private RectTransform _canvasRectTransform = default;
 			private ReorderableList _reorderableList = default;
 			private LayoutElement _layoutElement = default;
@@ -23,27 +20,14 @@ namespace Interface.Reorderable {
 				_reorderableList = GetComponentInParent<ReorderableList>();
 				_layoutElement = GetComponent<LayoutElement>();
 			}
-			
-			private void OnEnable() {
-				_onDragged.onPointerDown.AddListener(OnPointerDown);
-				_onDragged.onDragStart.AddListener(OnDragStart);
-				_onDragged.onDrag.AddListener(OnDrag);
-				_onDragged.onDragEnd.AddListener(OnDragEnd);
-			}
-			private void OnDisable() {
-				_onDragged.onPointerDown.RemoveListener(OnPointerDown);
-				_onDragged.onDragStart.RemoveListener(OnDragStart);
-				_onDragged.onDrag.RemoveListener(OnDrag);
-				_onDragged.onDragEnd.RemoveListener(OnDragEnd);
-			}
 		#endregion
 		
-		#region Event handlers
-			private void OnPointerDown(PointerEventData _pointerData) {
+		#region Public functions
+			public void OnPointerDown(PointerEventData _pointerData) {
 				// Calculate drag offset.
 				_dragOffset = RectTransformUtility.WorldToScreenPoint(_reorderableList.camera, transform.position) - _pointerData.position;
 			}
-			private void OnDragStart(PointerEventData _pointerData) {
+			public void OnDragStart(PointerEventData _pointerData) {
 				// Prevent multiple elements to be dragged at once.
 				if (_reorderableList.isDragging) {
 					return;
@@ -60,7 +44,7 @@ namespace Interface.Reorderable {
 				// Set placement indicator.
 				_reorderableList.UpdateIndicatorPosition(_pointerData.position + _dragOffset);
 			}
-			private void OnDrag(PointerEventData _pointerData) {
+			public void OnDrag(PointerEventData _pointerData) {
 				if (!_isDragging) {
 					return;
 				}
@@ -71,7 +55,7 @@ namespace Interface.Reorderable {
 				// Set placement indicator.
 				_reorderableList.UpdateIndicatorPosition(_pointerData.position + _dragOffset);
 			}
-			private void OnDragEnd(PointerEventData _pointerData) {
+			public void OnDragEnd(PointerEventData _pointerData) {
 				if (!_isDragging) {
 					return;
 				}
