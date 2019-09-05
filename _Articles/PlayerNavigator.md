@@ -1,6 +1,10 @@
 # Player navigator using a navigation mesh
 
-![PlayerNavigator.gif](./PlayerNavigator.gif)
+<p align="center">
+
+  ![PlayerNavigator.gif](./PlayerNavigator.gif)
+
+</p>
 
 This article will take you through the process of making a player navigation scripts that allows you to move a character across Unity's navigation surface using a direction as input device. This allows you to pre-generate a navigation mesh that the character can not leave and avoids the necessity of doing physics calculations and putting up invisible barriers. The downside is that a player can not move off or across mesh links easily without creating a custom system for it, think of jumping over obstacles. Luckily not all games require this and so this method might be useful for your game. I like this method because it can be used with both stick input as well as pointer input, which makes it great for mobile games.
 
