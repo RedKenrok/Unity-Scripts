@@ -81,7 +81,7 @@ namespace Player {
 			/// <param name="_position">The raycast hit position.</param>
 			public void SetDestination(Transform _transform, Vector3 _position) {
 				// Check if the layer of the game object is valid.
-				if (!_layerMask.Contains(_transform.gameObject.layer)) {
+				if (!Contains(_layerMask, _transform.gameObject.layer)) {
 					return;
 				}
 				
@@ -98,6 +98,7 @@ namespace Player {
 				// Override the current input.
 				this._input = _input;
 			}
+			
 			/// <summary>Reset values when moving is done.</summary>
 			private void MoveCanceled() {
 				// Reset input.
@@ -110,7 +111,7 @@ namespace Player {
 			/// <param name="_mask">The layer mask.</param>
 			/// <param name="_layer">The index of the layer.</param>
 			/// <returns>True if layer is contained in mask.</returns>
-			private static bool Contains(this LayerMask _mask, int _layer) {
+			private static bool Contains(LayerMask _mask, int _layer) {
 				return (_mask & 1 << _layer) > 0;
 			}
 			
